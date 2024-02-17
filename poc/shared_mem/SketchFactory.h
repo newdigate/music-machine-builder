@@ -5,7 +5,7 @@
 #include <memory>
 #include <stdexcept>
 
-#include "SketchBase.h"
+using SketchBase_creator_t = void (*)();
 
 class SketchFactory {
 public:
@@ -15,12 +15,12 @@ public:
             throw std::runtime_error(dlerror());
         }
         Reset_dlerror();
-        creator = reinterpret_cast<SketchBase_creator_t>(dlsym(handler, "create"));
+        setup_loader = reinterpret_cast<SketchBase_creator_t>(dlsym(handler, "setup"));
         Check_dlerror();
     }
 
-    std::unique_ptr<SketchBase> create() const {
-        return std::unique_ptr<SketchBase>(creator());
+    void setup() const {
+        setup_loader();
     }
 
     ~SketchFactory() {
@@ -31,7 +31,7 @@ public:
 
 private:
     void * handler = nullptr;
-    SketchBase_creator_t creator = nullptr;
+    SketchBase_creator_t setup_loader = nullptr;
 
     static void Reset_dlerror() {
         dlerror();
