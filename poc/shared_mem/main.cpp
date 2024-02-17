@@ -3,8 +3,14 @@
 int main()
 {
     SketchFactory factory;
-    uint16_t framebuffer[128][126];
+
+    if (!factory.loadSketch("libTestSketch.dylib") ) {
+        std::cout << "Failed to load sketch!" << std::endl;
+        return -1;
+    }
 
     factory.setup();
+
+    return 0;
     //base->foo();
 }
