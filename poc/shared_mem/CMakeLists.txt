@@ -9,4 +9,4 @@ set(TESTSKETCH_SOURCE_FILES TestSketch.c)
 add_library(TestSketch SHARED  ${TESTSKETCH_SOURCE_FILES})
 target_link_libraries(TestSketch MagicNumber)
 
-add_executable(main main.cpp)
+add_executable(main main.cpp SketchFactory.cpp)

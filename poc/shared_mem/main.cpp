@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "SketchFactory.h"
 
 int main()
@@ -11,6 +13,9 @@ int main()
 
     factory.setup();
 
+    while (true) {
+        factory.loop();
+    }
+
     return 0;
-    //base->foo();
 }
