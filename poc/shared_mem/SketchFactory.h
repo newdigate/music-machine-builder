@@ -3,14 +3,13 @@
 
 #include <dlfcn.h>
 #include <iostream>
-#include <memory>
 #include <stdexcept>
 
-using SketchBase_creator_t = void (*)();
+typedef void (*fp_void_no_parameters)();
 
 class SketchFactory {
 public:
-    SketchFactory() : handler(nullptr), setup_loader(nullptr) {
+    SketchFactory() : handler(nullptr), fp_setup(nullptr) {
     }
 
     bool loadSketch(const char* compiledSketchSOfilename) {
@@ -20,15 +19,15 @@ public:
             throw std::runtime_error(dlerror());
         }
         Reset_dlerror();
-        setup_loader = reinterpret_cast<SketchBase_creator_t>(dlsym(handler, "setup"));
+        fp_setup = reinterpret_cast<fp_void_no_parameters>(dlsym(handler, "setup"));
         Check_dlerror();
 
-        return (setup_loader != nullptr);
+        return (fp_setup != nullptr);
     }
 
     void setup() const {
-        if (handler && setup_loader)
-            setup_loader();
+        if (handler && fp_setup)
+            fp_setup();
         else
             std::cout << " ERROR: Sketch not loaded" << std::endl;
     }
@@ -41,7 +40,7 @@ public:
 
 private:
     void * handler;
-    SketchBase_creator_t setup_loader;
+    fp_void_no_parameters fp_setup;
 
     static void Reset_dlerror() {
         dlerror();
