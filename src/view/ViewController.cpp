@@ -7,7 +7,70 @@
 namespace newdigate {
     namespace machine {
         namespace view {
-            unsigned char KeyArrayViewController::tr909_key_intermediate_obj[] = {
+
+            std::map<GLFWwindow*, SceneController*> SceneController::windowSceneControllers;
+
+            const char* ViewControllerFactory::vertexShaderCode = R"glsl(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 Normal;
+layout (location = 3) in mat4 aInstanceMatrix;
+layout (location = 7) in float aTexuteIndex;
+
+out vec4 FragColor1;
+out vec4 FragColor2;
+out float TextureIndex;
+
+uniform mat4 projection;
+uniform mat4 view;
+uniform vec4 aColor1;
+uniform vec4 aColor2;
+uniform vec3 lightPos;
+uniform vec3 lightColor;
+uniform vec3 viewPos;
+
+void main()
+{
+    // ambient
+    float ambientStrength = 0.1;
+    vec3 ambient = ambientStrength * lightColor;
+
+    // diffuse
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(lightPos - aPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * lightColor;
+
+    vec3 viewDir = normalize(viewPos - aPos);
+    vec3 reflectDir = reflect(-lightDir, Normal);
+
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(Normal, halfwayDir), 0.0), 32.0);
+
+    FragColor1 =  vec4((ambient + diffuse + spec), 0.5f) * aColor1;
+    FragColor2 =  vec4((ambient + diffuse + spec), 0.5f) * aColor2;
+    TextureIndex = aTexuteIndex;
+    gl_Position = projection * view * aInstanceMatrix * vec4(aPos, 1.0f);
+}
+)glsl";
+
+            const char* ViewControllerFactory::fragmentShaderCode = R"glsl(
+#version 330 core
+out vec4 FragColor;
+
+in vec4 FragColor1;
+in vec4 FragColor2;
+in float TextureIndex;
+
+void main()
+{
+    FragColor = (TextureIndex * FragColor2) + ( (1.0f - TextureIndex) * FragColor1 );
+}
+)glsl";
+
+
+
+            unsigned char tr909_key_intermediate_obj[] = {
               0x6f, 0x20, 0x52, 0x6f, 0x6c, 0x61, 0x6e, 0x64, 0x5f, 0x54, 0x52, 0x2d,
               0x39, 0x30, 0x39, 0x2e, 0x73, 0x74, 0x6c, 0x0a, 0x76, 0x20, 0x2d, 0x30,
               0x2e, 0x32, 0x35, 0x36, 0x34, 0x31, 0x33, 0x20, 0x31, 0x2e, 0x33, 0x32,

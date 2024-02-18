@@ -9,6 +9,7 @@
 #include <GLFW/glfw3.h>
 #endif
 
+
 #include "../ext/imgui/imgui.h"
 #include "../ext/imgui/imgui_impl_glfw.h"
 #include "../ext/imgui/imgui_impl_opengl3.h"
@@ -20,11 +21,19 @@
 #include "view/ImGuiController.h"
 #include "view/ViewController.h"
 
+//#define STB_IMAGE_IMPLEMENTATION
+//#include "stb_image.h"
+
 GLFWwindow *window = nullptr;
 
+newdigate::machine::machinekey keys[16];
 
 int main()
 {
+    newdigate::machine::machine.Keys.push_back( keys[0] );
+    keys[1].x += 2.5f;
+    newdigate::machine::machine.Keys.push_back( keys[1] );
+
     /* Initialize the library */
     if (!glfwInit()) {
         return false;
@@ -49,6 +58,9 @@ int main()
     }
     glfwMakeContextCurrent(window);
 
+    newdigate::machine::view::ViewControllerFactory factory;
+    newdigate::machine::view::ViewController *view_controller = factory.create(window, &newdigate::machine::machine, 640, 480);
+
     newdigate::machine::view::ImGuiController imguiController;
     imguiController.InitializeImGui(window);
 
@@ -63,16 +75,15 @@ int main()
         imguiController.RenderDeviceInspector();
 
         glfwMakeContextCurrent(window);
-
-
         imguiController.Render();
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        /*
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glViewport(0, 0, display_w, display_h);*/
+
+        view_controller->Update();
+
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
