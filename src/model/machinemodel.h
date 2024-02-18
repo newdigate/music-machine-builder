@@ -34,14 +34,15 @@ namespace newdigate {
         public:
             bool hasSoundCard = false;
             machinedisplaytype displaytype = None;
-            unsigned intNumKeys = 0;
-            unsigned intNumLeds = 0;
+            unsigned int NumKeys = 0;
+            unsigned int NumLeds = 0;
             std::vector<machinekey> Keys;
         };
 
+        extern "C" newdigate::machine::machinemodel machine;
+        extern "C" int magicNumber;
 
     }
 }
-extern "C" newdigate::machine::machinemodel machine;
-extern "C" int magicNumber;
+
 #endif //MACHINEMODEL_H

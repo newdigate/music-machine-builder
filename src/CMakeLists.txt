@@ -7,6 +7,8 @@ add_library(machinemodel SHARED STATIC model/machinemodel.cpp)
 
 add_executable(main
         main.cpp
+        view/ViewController.cpp
+        view/ImGuiController.cpp
         ../ext/imgui/imgui.cpp
         ../ext/imgui/imgui_demo.cpp
         ../ext/imgui/imgui_draw.cpp
