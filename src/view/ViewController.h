@@ -91,6 +91,7 @@ namespace newdigate {
                     for (auto && key : keys) {
                         glm::mat4 model = glm::mat4(1.0f);
                         _modelMatrices[i] =  glm::translate(model, glm::vec3(key.x, key.y, key.z));
+                        i++;
                     }
 
                     _shader->use();
@@ -101,12 +102,12 @@ namespace newdigate {
                         glBindVertexArray(_keyModel->meshes[i].VAO);
 
                         glBindBuffer(GL_ARRAY_BUFFER, _modelTextIndexGLBuffer);
-                        glBufferData(GL_ARRAY_BUFFER, MAX_KEYS * sizeof(float), &_modelTextureIndex[0], GL_STATIC_DRAW);
+                        glBufferData(GL_ARRAY_BUFFER, keys.size() * sizeof(float), &_modelTextureIndex[0], GL_STATIC_DRAW);
 
                         glBindBuffer(GL_ARRAY_BUFFER, _modelTransformGLBuffer);
-                        glBufferData(GL_ARRAY_BUFFER, MAX_KEYS * sizeof(glm::mat4), &_modelMatrices[0], GL_STATIC_DRAW);
+                        glBufferData(GL_ARRAY_BUFFER, keys.size() * sizeof(glm::mat4), &_modelMatrices[0], GL_STATIC_DRAW);
 
-                        glDrawElementsInstanced(GL_TRIANGLES, keys.size(), GL_UNSIGNED_INT, 0, keys.size());
+                        glDrawElementsInstanced(GL_TRIANGLES, static_cast<unsigned int>(_keyModel->meshes[i].indices.size()), GL_UNSIGNED_INT, 0, keys.size());
 
                         glBindVertexArray(0);
                     }
