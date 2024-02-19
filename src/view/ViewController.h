@@ -32,7 +32,7 @@ namespace newdigate {
                 explicit KeyArrayViewController(GLFWwindow *window, Shader *shader, uint16_t numKeys) : _window(window), _shader(shader), _numKeys(numKeys), _modelTransformGLBuffer(0) {
                     _keyModel = new Model(tr909_key_intermediate_obj, tr909_key_intermediate_obj_len);
                     _modelMatrices = new glm::mat4[MAX_KEYS];
-                    _modelTextureIndex = new float[MAX_KEYS] {0};
+                    _modelTextureIndex = new float[MAX_KEYS] {1.0f, 0.25f, 0.0f};
 
                     /* Bind the modelTextureIndex instance array parameter */
                     glGenBuffers(1, &_modelTextIndexGLBuffer);
@@ -160,7 +160,7 @@ namespace newdigate {
                     glfwSetFramebufferSizeCallback(window, delegate_framebuffer_size_callback);// this->framebuffer_size_callback);
                     glfwSetCursorPosCallback(window, delegate_mouse_callback);
                     glfwSetScrollCallback(window, delegate_scroll_callback);
-
+                    glfwSetMouseButtonCallback(window, delegate_mouse_button_callback);
                     glEnable(GL_DEPTH_TEST);
                 }
 
@@ -218,6 +218,7 @@ namespace newdigate {
                 // -------------------------------------------------------
                 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
                 {
+
                     float xpos = static_cast<float>(xposIn);
                     float ypos = static_cast<float>(yposIn);
 
@@ -234,6 +235,12 @@ namespace newdigate {
                     lastX = xpos;
                     lastY = ypos;
 
+                    int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+                    if (state != GLFW_PRESS) {
+                        return;
+                    }
+
+
                     camera.ProcessMouseMovement(xoffset, yoffset);
                 }
                 static void delegate_mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
@@ -241,6 +248,16 @@ namespace newdigate {
                         windowSceneControllers[window]->mouse_callback(window, xposIn, yposIn);
                     }
                 }
+
+                void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+                {
+                }
+                static void delegate_mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+                    if (windowSceneControllers.count(window) > 0) {
+                        windowSceneControllers[window]->mouse_button_callback(window, button, action, mods);
+                    }
+                }
+
                 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
                 // ----------------------------------------------------------------------
                 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)

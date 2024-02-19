@@ -33,6 +33,8 @@ int main()
     newdigate::machine::machine.Keys.push_back( keys[0] );
     keys[1].x += 2.5f;
     newdigate::machine::machine.Keys.push_back( keys[1] );
+    keys[2].x += 5.0f;
+    newdigate::machine::machine.Keys.push_back( keys[2] );
 
     /* Initialize the library */
     if (!glfwInit()) {
