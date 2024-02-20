@@ -10,7 +10,7 @@ namespace newdigate {
 
             std::map<GLFWwindow*, SceneController*> SceneController::windowSceneControllers;
 
-            const char* ViewControllerFactory::vertexShaderCode = R"glsl(
+            const char* ViewControllerFactory::vertex_shader_bicolor_code = R"glsl(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 Normal;
@@ -54,7 +54,7 @@ void main()
 }
 )glsl";
 
-            const char* ViewControllerFactory::fragmentShaderCode = R"glsl(
+            const char* ViewControllerFactory::fragment_shader_bicolor_code = R"glsl(
 #version 330 core
 out vec4 FragColor;
 
@@ -68,7 +68,71 @@ void main()
 }
 )glsl";
 
+            const char* ViewControllerFactory::vertex_shader_texture_code = R"glsl(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 Normal;
+layout (location = 2) in vec2 aTexCoord;
 
+out vec4 FragColor1;
+out vec2 TexCoord;
+
+uniform mat4 projection;
+uniform mat4 view;
+uniform vec3 lightPos;
+uniform vec3 lightColor;
+uniform vec3 viewPos;
+
+void main()
+{
+    TexCoord = vec2(aTexCoord.x, aTexCoord.y);
+
+    // ambient
+    float ambientStrength = 0.1;
+    vec3 ambient = ambientStrength * lightColor;
+
+    // diffuse
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(lightPos - aPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * lightColor;
+
+    vec3 viewDir = normalize(viewPos - aPos);
+    vec3 reflectDir = reflect(-lightDir, Normal);
+
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(Normal, halfwayDir), 0.0), 32.0);
+
+    FragColor1 =  vec4((ambient + diffuse + spec), 1.0f);
+    gl_Position = projection * view * vec4(aPos, 1.0f);
+}
+)glsl";
+
+            const char* ViewControllerFactory::fragment_shader_texture_code = R"glsl(
+#version 330 core
+out vec4 FragColor;
+
+in vec4 FragColor1;
+in vec2 TexCoord;
+
+uniform sampler2D texture1;
+void main()
+{
+	FragColor = FragColor1 * texture(texture1, TexCoord);
+}
+)glsl";
+
+            const float DisplayViewController::vertices[32] = {
+                    // positions          // normals (?)           // texture coords
+                    1.0f, 0.0f, 1.0f,     0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // top right
+                    1.0f, 0.0f, -1.0f,    0.0f, 1.0f, 0.0f,   1.0f, 1.0f, // bottom right
+                    -1.0f, 0.0f, -1.0f,   0.0f, 1.0f, 0.0f,   0.0f, 1.0f, // bottom left
+                    -1.0f, 0.0f, 1.0f,    0.0f, 1.0f, 0.0f,   0.0f, 0.0f  // top left
+                };
+            const unsigned int DisplayViewController::indices[6] = {
+                0, 1, 3, // first triangle
+                1, 2, 3  // second triangle
+            };
 
             unsigned char tr909_key_intermediate_obj[] = {
               0x6f, 0x20, 0x52, 0x6f, 0x6c, 0x61, 0x6e, 0x64, 0x5f, 0x54, 0x52, 0x2d,

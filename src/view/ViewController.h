@@ -86,10 +86,11 @@ namespace newdigate {
                     }
                 }
 
-                void Draw(std::vector<machinekey> keys) {
+                void Draw(std::vector<machinekey> &keys) {
                     unsigned i = 0;
                     for (auto && key : keys) {
                         glm::mat4 model = glm::mat4(1.0f);
+                        //model = glm::rotate(model, -static_cast<float>(M_PI)/2.0f, glm::vec3(1.0f, 0.0f, 0.0f));
                         _modelMatrices[i] =  glm::translate(model, glm::vec3(key.x, key.y, key.z));
                         i++;
                     }
@@ -138,13 +139,73 @@ namespace newdigate {
             };
 
             class DisplayViewController {
+            public:
+                static const float vertices[32];
+                static const unsigned int indices[6] ;
+                GLuint texture;
+
+                explicit DisplayViewController(GLFWwindow *window, Shader *shader, uint16_t *framebuffer) : _window(window), _shader(shader), _framebuffer(framebuffer) {
+                    glGenVertexArrays(1, &VAO);
+                    glGenBuffers(1, &VBO);
+                    glGenBuffers(1, &EBO);
+
+                    glBindVertexArray(VAO);
+
+                    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+                    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+                    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+                    // position attribute
+                    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+                    glEnableVertexAttribArray(0);
+                    // normal attribute
+                    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+                    glEnableVertexAttribArray(1);
+                    // texture coord attribute
+                    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+                    glEnableVertexAttribArray(2);
+
+
+                    // load and create a texture
+                    // -------------------------
+
+                    glGenTextures(1, &texture);
+                    glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
+                    // set the texture wrapping parameters
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	// set texture wrapping to GL_REPEAT (default wrapping method)
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                    // set texture filtering parameters
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                }
+
+                void Update() {
+                    _shader->use();
+                    glBindTexture(GL_TEXTURE_2D, texture);
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, _framebuffer);
+                    // render
+                    // ------
+                    // render container
+                    glBindVertexArray(VAO);
+                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+                }
+            private:
+                GLFWwindow* _window;
+                Shader *_shader;
+                unsigned int VBO;
+                unsigned int VAO;
+                unsigned int EBO;
+                uint16_t *_framebuffer;
             };
 
             class SceneController {
             public:
-                SceneController(GLFWwindow *window, Shader *shader, unsigned awidth, unsigned aheight)
+                SceneController(GLFWwindow *window, Shader *shader, Shader *texture_shader, unsigned awidth, unsigned aheight)
                     : _window(window),
-                      _shader(shader),
+                      _bicolor_instance_shader(shader),
+                      _texture_shader(texture_shader),
                       lightPos(1.2f, 5.0f, 2.0f),
                       _width(awidth),
                       _height(aheight) {
@@ -169,27 +230,36 @@ namespace newdigate {
                     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     //float aspectRatio = static_cast<float>(_width) / static_cast<float>(_height);
-                    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)640 / (float)480, 0.1f, 100.0f);
+                    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 640.0f / 480.0f, 0.1f, 100.0f);
                     glm::mat4 view = camera.GetViewMatrix();
-                    _shader->use();
-                    _shader->setMat4("projection", projection);
-                    _shader->setMat4("view", view);
-                    _shader->setVec4("aColor1",0.7f, 0.7f, 0.7f, 0.8f);
-                    _shader->setVec4("aColor2",1.0f, 0.7f, 0.7f, 1.0f);
-                    _shader->setVec3("lightPos", lightPos);
-                    _shader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-                    _shader->setVec3("viewPos", camera.Position);
+                    _texture_shader->use();
+                    _texture_shader->setMat4("projection", projection);
+                    _texture_shader->setMat4("view", view);
+                    _texture_shader->setVec3("lightPos", lightPos);
+                    _texture_shader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+                    _texture_shader->setVec3("viewPos", camera.Position);
+
+                    _bicolor_instance_shader->use();
+                    _bicolor_instance_shader->setMat4("projection", projection);
+                    _bicolor_instance_shader->setMat4("view", view);
+                    _bicolor_instance_shader->setVec4("aColor1",0.7f, 0.7f, 0.7f, 0.8f);
+                    _bicolor_instance_shader->setVec4("aColor2",1.0f, 0.7f, 0.7f, 1.0f);
+                    _bicolor_instance_shader->setVec3("lightPos", lightPos);
+                    _bicolor_instance_shader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+                    _bicolor_instance_shader->setVec3("viewPos", camera.Position);
                     // draw planet
                     glm::mat4 model = glm::mat4(1.0f);
                     model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
                     model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
-                    _shader->setMat4("model", model);
+                    _bicolor_instance_shader->setMat4("model", model);
+
 
                 }
 
             private:
                 GLFWwindow* _window;
-                Shader *_shader;
+                Shader *_bicolor_instance_shader;
+                Shader *_texture_shader;
                 static std::map<GLFWwindow*, SceneController*> windowSceneControllers;
 
                 Camera camera;
@@ -273,17 +343,23 @@ namespace newdigate {
 
             class ViewController {
             public:
-                explicit ViewController(GLFWwindow *window, Shader *shader, machinemodel *machine, unsigned awidth, unsigned aheight) : _window(window), _shader(shader), _machine(machine), _sceneController(window, shader, awidth, aheight), _keyArrayViewController(window, shader, 18) {
+                explicit ViewController(GLFWwindow *window, Shader *bicolor_instance_shader, Shader *texture_shader, machinemodel *machine, unsigned awidth, unsigned aheight) :
+                    _window(window), _bicolor_instance_shader(bicolor_instance_shader), _texture_shader(texture_shader), _machine(machine),
+                    _sceneController(window, bicolor_instance_shader, texture_shader, awidth, aheight),
+                    _keyArrayViewController(window, bicolor_instance_shader, 18),
+                    _displayViewController(window, texture_shader, machine->framebuffer){
                 }
 
                 void Update() {
                     _sceneController.Update();
                     _keyArrayViewController.Draw(machine.Keys);
+                    _displayViewController.Update();
                 }
 
             private:
                 GLFWwindow *_window;
-                Shader *_shader;
+                Shader *_bicolor_instance_shader;
+                Shader *_texture_shader;
                 machinemodel *_machine;
 
                 SceneController _sceneController;
@@ -295,15 +371,21 @@ namespace newdigate {
             class ViewControllerFactory {
             public:
                 ViewController *create(GLFWwindow *window, machinemodel *machine, unsigned awidth, unsigned aheight) {
-                    const std::string vertexShaderCodeStr = std::string(vertexShaderCode);
-                    const std::string fragmentShaderCodeStr = std::string(fragmentShaderCode);
+                    const std::string vertex_shader_bicolor_code_str = std::string(vertex_shader_bicolor_code);
+                    const std::string fragment_shader_bicolor_code_str = std::string(fragment_shader_bicolor_code);
+                    Shader *bicolor_instance_shader = new Shader(vertex_shader_bicolor_code_str,  fragment_shader_bicolor_code_str);
 
-                    Shader *shader = new Shader(vertexShaderCodeStr,  fragmentShaderCodeStr);
-                    return new  ViewController(window, shader, machine, awidth, aheight);
+                    const std::string vertex_shader_texture_code_str = std::string(vertex_shader_texture_code);
+                    const std::string fragment_shader_texture_code_str = std::string(fragment_shader_texture_code);
+                    Shader *texture_shader = new Shader(vertex_shader_texture_code_str,  fragment_shader_texture_code_str);
+
+                    return new  ViewController(window, bicolor_instance_shader, texture_shader, machine, awidth, aheight);
                 }
             private:
-                static const char* vertexShaderCode;
-                static const char* fragmentShaderCode;
+                static const char* vertex_shader_bicolor_code;
+                static const char* fragment_shader_bicolor_code;
+                static const char* vertex_shader_texture_code;
+                static const char* fragment_shader_texture_code;
             };
         }
     }

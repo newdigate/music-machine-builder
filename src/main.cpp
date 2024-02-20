@@ -28,12 +28,12 @@ GLFWwindow *window = nullptr;
 
 newdigate::machine::machinekey keys[16];
 
-int main()
-{
+int main() {
+    keys[0].x += 2.5f;
     newdigate::machine::machine.Keys.push_back( keys[0] );
-    keys[1].x += 2.5f;
+    keys[1].x += 5.0f;
     newdigate::machine::machine.Keys.push_back( keys[1] );
-    keys[2].x += 5.0f;
+    keys[2].x += 7.5f;
     newdigate::machine::machine.Keys.push_back( keys[2] );
 
     /* Initialize the library */
@@ -50,9 +50,8 @@ int main()
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true); // comment this line in a release build!
 #endif
 
-    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-    window = glfwCreateWindow(640, 480, "DIY Music Machine", NULL, NULL);
+
+    window = glfwCreateWindow(1024, 786, "DIY Music Machine", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -68,6 +67,12 @@ int main()
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+
+        for (auto i=0; i < 128; i++) {
+            for (auto j=0; j < 128; j++) {
+                newdigate::machine::machine.framebuffer[j*128+i] = std::rand() * 0xFFFF;
+            }
+        }
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();

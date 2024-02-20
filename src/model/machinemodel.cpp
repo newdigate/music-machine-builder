@@ -6,6 +6,3 @@
 extern "C" {
     newdigate::machine::machinemodel machine;
 }
-extern "C" {
-    int magicNumber = 666;
-}

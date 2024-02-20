@@ -37,10 +37,10 @@ namespace newdigate {
             unsigned int NumKeys = 0;
             unsigned int NumLeds = 0;
             std::vector<machinekey> Keys;
+            uint16_t framebuffer[240 * 240];
         };
 
         extern "C" newdigate::machine::machinemodel machine;
-        extern "C" int magicNumber;
 
     }
 }
