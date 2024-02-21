@@ -20,6 +20,7 @@ namespace newdigate {
 
         class machineled {
         public:
+            float x = 0,y = 0, z = 0;
             uint16_t pwmValue;    // 12-bit PWM value
         };
 
@@ -37,6 +38,7 @@ namespace newdigate {
             unsigned int NumKeys = 0;
             unsigned int NumLeds = 0;
             std::vector<machinekey> Keys;
+            std::vector<machineled> Leds;
             uint16_t framebuffer[240 * 240];
             float machine_led_pwm_values[16*16];
         };

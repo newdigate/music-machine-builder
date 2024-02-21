@@ -21,7 +21,8 @@ add_executable(main
         ../ext/imgui/imgui_widgets.cpp
         ../ext/imgui/imgui_impl_glfw.cpp
         ../ext/imgui/imgui_impl_opengl3.cpp
-        ../ext/ImGuiFileDialog/ImGuiFileDialog.cpp)
+        ../ext/ImGuiFileDialog/ImGuiFileDialog.cpp
+        resources/alpine-keycap-led-intermediate.cpp)
 target_link_libraries(main machinemodel  ${LIBS})
 
 target_link_libraries(main assimp)

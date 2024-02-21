@@ -26,6 +26,9 @@ namespace newdigate {
             extern unsigned char tr909_key_intermediate_obj[];
             extern unsigned int tr909_key_intermediate_obj_len;
 
+            extern unsigned int alpine_keycap_led_intermediate_obj_len;
+            extern unsigned char alpine_keycap_led_intermediate_obj[];
+
             class KeyArrayViewController {
             public:
 
@@ -86,7 +89,7 @@ namespace newdigate {
                     }
                 }
 
-                void Draw(std::vector<machinekey> &keys) {
+                void Draw(const std::vector<machinekey> &keys) const {
                     unsigned i = 0;
                     for (auto && key : keys) {
                         glm::mat4 model = glm::mat4(1.0f);
@@ -96,19 +99,20 @@ namespace newdigate {
                     }
 
                     _shader->use();
-
+                    _shader->setVec4("aColor1",0.7f, 0.7f, 0.7f, 0.8f);
+                    _shader->setVec4("aColor2",1.0f, 0.7f, 0.7f, 1.0f);
 
                     for (unsigned int i = 0; i < _keyModel->meshes.size(); i++)
                     {
                         glBindVertexArray(_keyModel->meshes[i].VAO);
 
                         glBindBuffer(GL_ARRAY_BUFFER, _modelTextIndexGLBuffer);
-                        glBufferData(GL_ARRAY_BUFFER, keys.size() * sizeof(float), &_modelTextureIndex[0], GL_STATIC_DRAW);
+                        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(keys.size()) * sizeof(float), &_modelTextureIndex[0], GL_STATIC_DRAW);
 
                         glBindBuffer(GL_ARRAY_BUFFER, _modelTransformGLBuffer);
-                        glBufferData(GL_ARRAY_BUFFER, keys.size() * sizeof(glm::mat4), &_modelMatrices[0], GL_STATIC_DRAW);
+                        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(keys.size()) * sizeof(glm::mat4), &_modelMatrices[0], GL_STATIC_DRAW);
 
-                        glDrawElementsInstanced(GL_TRIANGLES, static_cast<unsigned int>(_keyModel->meshes[i].indices.size()), GL_UNSIGNED_INT, 0, keys.size());
+                        glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(_keyModel->meshes[i].indices.size()), GL_UNSIGNED_INT, 0, keys.size());
 
                         glBindVertexArray(0);
                     }
@@ -136,6 +140,112 @@ namespace newdigate {
             };
 
             class LEDArrayViewController {
+            public:
+                    explicit LEDArrayViewController(GLFWwindow *window, Shader *shader, uint16_t numKeys, float *textureIndexes) :
+                    _window(window), _shader(shader), _numLEDs(numKeys), _modelTransformGLBuffer(0), _modelTextureIndex(textureIndexes),_modelTextIndexGLBuffer(0)  {
+                    _ledModel = new Model(alpine_keycap_led_intermediate_obj, alpine_keycap_led_intermediate_obj_len);
+                    _modelMatrices = new glm::mat4[MAX_LEDS];
+                    //modelTextureIndex = new float[MAX_KEYS] {1.0f, 0.25f, 0.0f};
+
+                    /* Bind the modelTextureIndex instance array parameter */
+                    glGenBuffers(1, &_modelTextIndexGLBuffer);
+                    glBindBuffer(GL_ARRAY_BUFFER, _modelTextIndexGLBuffer);
+                    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(MAX_LEDS * sizeof(float)), &_modelTextureIndex[0], GL_STATIC_DRAW);
+                    for (unsigned int i = 0; i < _ledModel->meshes.size(); i++)
+                    {
+                        unsigned int VAO = _ledModel->meshes[i].VAO;
+                        glBindVertexArray(VAO);
+                        // set attribute pointers for matrix (4 times vec4)
+                        glEnableVertexAttribArray(7);
+                        glVertexAttribPointer(7, 1, GL_FLOAT, GL_FALSE, sizeof(float),  (void*)0);
+
+                        glVertexAttribDivisor(7, 1);
+
+                        glBindVertexArray(0);
+                    }
+
+                    /* Bind the instance transform array */
+
+                    glGenBuffers(1, &_modelTransformGLBuffer);
+                    glBindBuffer(GL_ARRAY_BUFFER, _modelTransformGLBuffer);
+                    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(MAX_LEDS * sizeof(glm::mat4)), &_modelMatrices[0], GL_STATIC_DRAW);
+
+
+                    // set transformation matrices as an instance vertex attribute (with divisor 1)
+                    // note: we're cheating a little by taking the, now publicly declared, VAO of the model's mesh(es) and adding new vertexAttribPointers
+                    // normally you'd want to do this in a more organized fashion, but for learning purposes this will do.
+                    // -----------------------------------------------------------------------------------------------------------------------------------
+                    for (unsigned int i = 0; i < _ledModel->meshes.size(); i++)
+                    {
+                        unsigned int VAO = _ledModel->meshes[i].VAO;
+                        glBindVertexArray(VAO);
+                        // set attribute pointers for matrix (4 times vec4)
+                        glEnableVertexAttribArray(3);
+                        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+                        glEnableVertexAttribArray(4);
+                        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+                        glEnableVertexAttribArray(5);
+                        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+                        glEnableVertexAttribArray(6);
+                        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+
+                        glVertexAttribDivisor(3, 1);
+                        glVertexAttribDivisor(4, 1);
+                        glVertexAttribDivisor(5, 1);
+                        glVertexAttribDivisor(6, 1);
+                        //glVertexAttribDivisor(7, 1);
+
+                        glBindVertexArray(0);
+                    }
+                }
+
+                void Draw(const std::vector<machineled> &leds) const {
+                    unsigned i = 0;
+                    for (auto && key : leds) {
+                        glm::mat4 model = glm::mat4(1.0f);
+                        //model = glm::rotate(model, -static_cast<float>(M_PI)/2.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+                        _modelMatrices[i] =  glm::translate(model, glm::vec3(key.x, key.y, key.z));
+                        i++;
+                    }
+
+                    _shader->use();
+                    _shader->setVec4("aColor1",0.4f, 0.4f, 0.4f, 1.0f);
+                    _shader->setVec4("aColor2",1.0f, 0.0f, 0.0f, 1.0f);
+
+                    for (unsigned int i = 0; i < _ledModel->meshes.size(); i++)
+                    {
+                        glBindVertexArray(_ledModel->meshes[i].VAO);
+
+                        glBindBuffer(GL_ARRAY_BUFFER, _modelTextIndexGLBuffer);
+                        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(leds.size() * sizeof(float)), &_modelTextureIndex[0], GL_STATIC_DRAW);
+
+                        glBindBuffer(GL_ARRAY_BUFFER, _modelTransformGLBuffer);
+                        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(leds.size() * sizeof(glm::mat4)), &_modelMatrices[0], GL_STATIC_DRAW);
+
+                        glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(_ledModel->meshes[i].indices.size()), GL_UNSIGNED_INT, 0, leds.size());
+
+                        glBindVertexArray(0);
+                    }
+                    _ledModel->Draw(*_shader);
+                }
+
+
+                virtual ~LEDArrayViewController() {
+                    delete [] _modelMatrices;
+                    delete [] _modelTextureIndex;
+                }
+            private:
+                GLFWwindow* _window;
+                Shader *_shader;
+                Model *_ledModel;
+                uint16_t _numLEDs;
+
+                unsigned _modelTextIndexGLBuffer;
+                unsigned _modelTransformGLBuffer;
+
+                glm::mat4* _modelMatrices;
+                float *_modelTextureIndex;
+                const unsigned MAX_LEDS = 256;
             };
 
             class DisplayViewController {
@@ -144,7 +254,14 @@ namespace newdigate {
                 static const unsigned int indices[6] ;
                 GLuint texture;
 
-                explicit DisplayViewController(GLFWwindow *window, Shader *shader, uint16_t *framebuffer) : _window(window), _shader(shader), _framebuffer(framebuffer) {
+                explicit DisplayViewController(GLFWwindow *window, Shader *shader, uint16_t *framebuffer) :
+                        _window(window),
+                        _shader(shader),
+                        _framebuffer(framebuffer),
+                        VAO(0),
+                        VBO(0),
+                        EBO(0),
+                        texture(0){
                     glGenVertexArrays(1, &VAO);
                     glGenBuffers(1, &VBO);
                     glGenBuffers(1, &EBO);
@@ -380,12 +497,15 @@ namespace newdigate {
                     _window(window), _bicolor_instance_shader(bicolor_instance_shader), _texture_shader(texture_shader), _machine(machine),
                     _sceneController(window, bicolor_instance_shader, texture_shader, awidth, aheight),
                     _keyArrayViewController(window, bicolor_instance_shader, 18, machine->machine_led_pwm_values),
-                    _displayViewController(window, texture_shader, machine->framebuffer){
+                    _displayViewController(window, texture_shader, machine->framebuffer),
+                    _ledArrayViewController(window, bicolor_instance_shader, 18, machine->machine_led_pwm_values)
+                    {
                 }
 
                 void Update() {
                     _sceneController.Update();
                     _keyArrayViewController.Draw(machine.Keys);
+                    _ledArrayViewController.Draw(machine.Leds);
                     _displayViewController.Update();
                 }
 

@@ -27,6 +27,7 @@
 GLFWwindow *window = nullptr;
 
 newdigate::machine::machinekey keys[16*16];
+newdigate::machine::machineled leds[16*16];
 
 int count = 0;
 
@@ -36,7 +37,13 @@ int main() {
             auto &key = keys[j*16+i];
             key.x += (i+1) * 2.5f;
             key.z += j * 2.5f;
+
+            auto &led = leds[j*16+i];
+            led.x += (i+1) * 2.5f;
+            led.z += j * 2.5f;
+
             newdigate::machine::machine.Keys.push_back( key );
+            newdigate::machine::machine.Leds.push_back( led );
         }
     }
 
@@ -77,8 +84,8 @@ int main() {
                 newdigate::machine::machine.framebuffer[j*128+i] = std::rand() * 0xFFFF;
             }
         }
-        newdigate::machine::machine.machine_led_pwm_values[(count/8-1) % 256] = 0.0f;
-        newdigate::machine::machine.machine_led_pwm_values[count/8 % 256] = 1.0f;
+        newdigate::machine::machine.machine_led_pwm_values[(count/64-1) % 256] = 0.0f;
+        newdigate::machine::machine.machine_led_pwm_values[count/64 % 256] = 1.0f;
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
