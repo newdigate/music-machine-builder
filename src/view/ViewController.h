@@ -29,10 +29,10 @@ namespace newdigate {
             class KeyArrayViewController {
             public:
 
-                explicit KeyArrayViewController(GLFWwindow *window, Shader *shader, uint16_t numKeys) : _window(window), _shader(shader), _numKeys(numKeys), _modelTransformGLBuffer(0) {
+                explicit KeyArrayViewController(GLFWwindow *window, Shader *shader, uint16_t numKeys, float *textureIndexes) : _window(window), _shader(shader), _numKeys(numKeys), _modelTransformGLBuffer(0), _modelTextureIndex(textureIndexes) {
                     _keyModel = new Model(tr909_key_intermediate_obj, tr909_key_intermediate_obj_len);
                     _modelMatrices = new glm::mat4[MAX_KEYS];
-                    _modelTextureIndex = new float[MAX_KEYS] {1.0f, 0.25f, 0.0f};
+                    //modelTextureIndex = new float[MAX_KEYS] {1.0f, 0.25f, 0.0f};
 
                     /* Bind the modelTextureIndex instance array parameter */
                     glGenBuffers(1, &_modelTextIndexGLBuffer);
@@ -183,6 +183,12 @@ namespace newdigate {
 
                 void Update() {
                     _shader->use();
+
+                    glm::mat4 model = glm::mat4(1.0f);
+                    model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
+                    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 0.0f));
+
+                    _shader->setMat4("aInstanceMatrix", model);
                     glBindTexture(GL_TEXTURE_2D, texture);
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, _framebuffer);
                     // render
@@ -226,7 +232,10 @@ namespace newdigate {
                 }
 
                 void Update() {
-
+                    float currentFrame = static_cast<float>(glfwGetTime());
+                    deltaTime = currentFrame - lastFrame;
+                    lastFrame = currentFrame;
+                    processInput();
                     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     //float aspectRatio = static_cast<float>(_width) / static_cast<float>(_height);
@@ -255,7 +264,28 @@ namespace newdigate {
 
 
                 }
+                void processInput()
+                {
+                    if (glfwGetKey(_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+                        glfwSetWindowShouldClose(_window, true);
 
+                    if (glfwGetKey(_window, GLFW_KEY_W) == GLFW_PRESS)
+                        camera.ProcessKeyboard(FORWARD, deltaTime);
+                    if (glfwGetKey(_window, GLFW_KEY_S) == GLFW_PRESS)
+                        camera.ProcessKeyboard(BACKWARD, deltaTime);
+                    if (glfwGetKey(_window, GLFW_KEY_A) == GLFW_PRESS)
+                        camera.ProcessKeyboard(LEFT, deltaTime);
+                    if (glfwGetKey(_window, GLFW_KEY_D) == GLFW_PRESS)
+                        camera.ProcessKeyboard(RIGHT, deltaTime);
+                    if (glfwGetKey(_window, GLFW_KEY_E) == GLFW_PRESS)
+                        camera.ProcessMouseMovement(1, 0);
+                    if (glfwGetKey(_window, GLFW_KEY_Q) == GLFW_PRESS)
+                        camera.ProcessMouseMovement(-1, 0);
+                    if (glfwGetKey(_window, GLFW_KEY_Z) == GLFW_PRESS)
+                        camera.ProcessMouseMovement(0, -1);
+                    if (glfwGetKey(_window, GLFW_KEY_C) == GLFW_PRESS)
+                        camera.ProcessMouseMovement(0, 1);
+                }
             private:
                 GLFWwindow* _window;
                 Shader *_bicolor_instance_shader;
@@ -269,6 +299,9 @@ namespace newdigate {
                 bool firstMouse;
                 unsigned _width, _height;
 
+                // timing
+                float deltaTime = 0.0f;
+                float lastFrame = 0.0f;
                 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
                 // ---------------------------------------------------------------------------------------------
                 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -346,7 +379,7 @@ namespace newdigate {
                 explicit ViewController(GLFWwindow *window, Shader *bicolor_instance_shader, Shader *texture_shader, machinemodel *machine, unsigned awidth, unsigned aheight) :
                     _window(window), _bicolor_instance_shader(bicolor_instance_shader), _texture_shader(texture_shader), _machine(machine),
                     _sceneController(window, bicolor_instance_shader, texture_shader, awidth, aheight),
-                    _keyArrayViewController(window, bicolor_instance_shader, 18),
+                    _keyArrayViewController(window, bicolor_instance_shader, 18, machine->machine_led_pwm_values),
                     _displayViewController(window, texture_shader, machine->framebuffer){
                 }
 

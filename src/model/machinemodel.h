@@ -38,6 +38,7 @@ namespace newdigate {
             unsigned int NumLeds = 0;
             std::vector<machinekey> Keys;
             uint16_t framebuffer[240 * 240];
+            float machine_led_pwm_values[16*16];
         };
 
         extern "C" newdigate::machine::machinemodel machine;

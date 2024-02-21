@@ -26,15 +26,19 @@
 
 GLFWwindow *window = nullptr;
 
-newdigate::machine::machinekey keys[16];
+newdigate::machine::machinekey keys[16*16];
+
+int count = 0;
 
 int main() {
-    keys[0].x += 2.5f;
-    newdigate::machine::machine.Keys.push_back( keys[0] );
-    keys[1].x += 5.0f;
-    newdigate::machine::machine.Keys.push_back( keys[1] );
-    keys[2].x += 7.5f;
-    newdigate::machine::machine.Keys.push_back( keys[2] );
+    for (auto i=0; i < 16; i++) {
+        for (auto j=0; j < 16; j++) {
+            auto &key = keys[j*16+i];
+            key.x += (i+1) * 2.5f;
+            key.z += j * 2.5f;
+            newdigate::machine::machine.Keys.push_back( key );
+        }
+    }
 
     /* Initialize the library */
     if (!glfwInit()) {
@@ -60,7 +64,7 @@ int main() {
     glfwMakeContextCurrent(window);
 
     newdigate::machine::view::ViewControllerFactory factory;
-    newdigate::machine::view::ViewController *view_controller = factory.create(window, &newdigate::machine::machine, 640, 480);
+    newdigate::machine::view::ViewController *view_controller = factory.create(window, &newdigate::machine::machine, 1024, 786);
 
     newdigate::machine::view::ImGuiController imguiController;
     imguiController.InitializeImGui(window);
@@ -73,7 +77,8 @@ int main() {
                 newdigate::machine::machine.framebuffer[j*128+i] = std::rand() * 0xFFFF;
             }
         }
-
+        newdigate::machine::machine.machine_led_pwm_values[(count/8-1) % 256] = 0.0f;
+        newdigate::machine::machine.machine_led_pwm_values[count/8 % 256] = 1.0f;
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -97,6 +102,7 @@ int main() {
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
+        count++;
     }
 
     // Cleanup

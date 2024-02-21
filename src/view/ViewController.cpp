@@ -82,7 +82,7 @@ uniform mat4 view;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform vec3 viewPos;
-
+uniform mat4 aInstanceMatrix;
 void main()
 {
     TexCoord = vec2(aTexCoord.x, aTexCoord.y);
@@ -104,7 +104,7 @@ void main()
     float spec = pow(max(dot(Normal, halfwayDir), 0.0), 32.0);
 
     FragColor1 =  vec4((ambient + diffuse + spec), 1.0f);
-    gl_Position = projection * view * vec4(aPos, 1.0f);
+    gl_Position = projection * view * aInstanceMatrix * vec4(aPos, 1.0f);
 }
 )glsl";
 
