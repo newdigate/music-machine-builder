@@ -41,13 +41,26 @@ namespace newdigate {
                 bool LoadSketch(const char *filename) {
                     auto loaded = _factory.loadSketch(filename);
                     if (loaded) {
-                        const int rc = pthread_create(&thread, NULL, arduinoThread, (void *)0);
+                        auto id = _instanceCount++;
+                        shouldClose = false;
+                        const int rc = pthread_create(&thread, NULL, arduinoThread, (void *)id);
+                        _instances[id] = this;
                         _isRunning = rc == 0;
                         return true;
                     }
                     return false;
                 }
+
+                void Setup() {
+                    _factory.setup();
+                }
+
+                void Loop() {
+                    _factory.loop();
+                }
+
                 static std::map<int, SketchEngine*> _instances;
+                static unsigned _instanceCount;
             private:
                 pthread_t thread;
 

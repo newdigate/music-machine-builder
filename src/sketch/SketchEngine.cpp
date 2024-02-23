@@ -7,17 +7,19 @@
 #include <iostream>
 #include <map>
 
+using namespace newdigate::machine::sketch;
 
-std::map<int, newdigate::machine::sketch::SketchEngine*> newdigate::machine::sketch::SketchEngine:: _instances;
+std::map<int, SketchEngine *> SketchEngine::_instances;
+unsigned SketchEngine::_instanceCount = 0;
 volatile bool newdigate::machine::sketch::shouldClose = false;
 
 void * newdigate::machine::sketch::arduinoThread(void *threadid) {
     long tid = (long)threadid;
+    if (SketchEngine::_instances.count(tid) == 0) return nullptr;
+    SketchEngine *engine = SketchEngine::_instances[tid];
+    engine->Setup();
     while(!shouldClose) {
-        //loop();
-        //delay(1);
-        std::cout << "one second!!!";
-        sleep(1);
+        engine->Loop();
     }
     //    cout << "Hello World! Thread ID, " << tid << endl;
     pthread_exit(NULL);
