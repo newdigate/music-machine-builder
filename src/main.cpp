@@ -10,6 +10,8 @@
 #endif
 
 
+#include <unistd.h>
+
 #include "../ext/imgui/imgui.h"
 #include "../ext/imgui/imgui_impl_glfw.h"
 #include "../ext/imgui/imgui_impl_opengl3.h"
@@ -20,6 +22,7 @@
 #include "model/machinemodel.h"
 #include "view/ImGuiController.h"
 #include "view/ViewController.h"
+#include "sketch/SketchEngine.h"
 
 //#define STB_IMAGE_IMPLEMENTATION
 //#include "stb_image.h"
@@ -46,6 +49,7 @@ int main() {
             newdigate::machine::machine.Leds.push_back( led );
         }
     }
+    newdigate::machine::sketch::SketchEngine sketch_engine;
 
     /* Initialize the library */
     if (!glfwInit()) {
@@ -73,7 +77,7 @@ int main() {
     newdigate::machine::view::ViewControllerFactory factory;
     newdigate::machine::view::ViewController *view_controller = factory.create(window, &newdigate::machine::machine, 1024, 786);
 
-    newdigate::machine::view::ImGuiController imguiController;
+    newdigate::machine::view::ImGuiController imguiController(sketch_engine);
     imguiController.InitializeImGui(window);
 
     while (!glfwWindowShouldClose(window)) {

@@ -22,6 +22,7 @@
 #include "../../ext/imgui/imgui_internal.h"
 #include "../../ext/ImGuiFileDialog/ImGuiFileDialog.h"
 #include "../../ext/ImGuiFileDialog/ImGuiFileDialogConfig.h"
+#include "../sketch/SketchEngine.h"
 
 namespace newdigate {
     namespace machine {
@@ -29,7 +30,7 @@ namespace newdigate {
 
             class ImGuiController {
             public:
-                ImGuiController() : main_tool_active(true) {
+                ImGuiController(sketch::SketchEngine &sketch_engine) : _sketch_engine(sketch_engine),  main_tool_active(true) {
                     newdigate::machine::machinemodel &model = newdigate::machine::machine;
                 }
 
@@ -62,7 +63,12 @@ namespace newdigate {
                                     config.path = ".";
                                     config.countSelectionMax = 1;
                                     config.flags = ImGuiFileDialogFlags_Modal;
-                                    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp", config);
+                                    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".dylib,.so", config);
+                                }
+                                if (_sketch_engine.IsRunning()) {
+                                    if (ImGui::MenuItem("Unload..", "Ctrl+S")) {
+                                        _sketch_engine.Unload();
+                                    }
                                 }
                                 if (ImGui::MenuItem("Save", "Ctrl+S"))   { /* Do stuff */ }
                                 if (ImGui::MenuItem("Close", "Ctrl+W"))  { main_tool_active = false; }
@@ -75,6 +81,10 @@ namespace newdigate {
                             if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
                                 std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
                                 std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+                                if (_sketch_engine.IsRunning()) {
+                                    _sketch_engine.Unload();
+                                }
+                                _sketch_engine.LoadSketch(filePathName.c_str());
                                 // action
                             }
 
@@ -113,6 +123,7 @@ namespace newdigate {
                 }
 
             private:
+                sketch::SketchEngine &_sketch_engine;
                 bool main_tool_active;
             };
         }

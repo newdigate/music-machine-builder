@@ -13,6 +13,8 @@ add_executable(main
         main.cpp
         view/ViewController.cpp
         view/ImGuiController.cpp
+        sketch/SketchFactory.cpp
+        sketch/SketchEngine.cpp
         ../ext/LearnOpenGL/stb_image_aug.c
         ../ext/imgui/imgui.cpp
         ../ext/imgui/imgui_demo.cpp
