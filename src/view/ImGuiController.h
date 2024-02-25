@@ -15,7 +15,7 @@
 #include <GLFW/glfw3.h>
 #endif
 
-#include "../model/machinemodel.h"
+#include "../../shared/model/machinemodel.h"
 #include "../../ext/imgui/imgui.h"
 #include "../../ext/imgui/imgui_impl_glfw.h"
 #include "../../ext/imgui/imgui_impl_opengl3.h"
@@ -23,6 +23,8 @@
 #include "../../ext/ImGuiFileDialog/ImGuiFileDialog.h"
 #include "../../ext/ImGuiFileDialog/ImGuiFileDialogConfig.h"
 #include "../sketch/SketchEngine.h"
+#include "ImGuiSerialMonitor.h"
+#include "hardware_serial.h"
 
 namespace newdigate {
     namespace machine {
@@ -30,7 +32,7 @@ namespace newdigate {
 
             class ImGuiController {
             public:
-                ImGuiController(sketch::SketchEngine &sketch_engine) : _sketch_engine(sketch_engine),  main_tool_active(true) {
+                ImGuiController(sketch::SketchEngine &sketch_engine) : _sketch_engine(sketch_engine),  _main_tool_active(true), _serial_monitor_open(true) {
                     newdigate::machine::machinemodel &model = newdigate::machine::machine;
                 }
 
@@ -48,12 +50,14 @@ namespace newdigate {
                     //ImGui::StyleColorsLight();
                     ImGui_ImplGlfw_InitForOpenGL(window, true);
                     ImGui_ImplOpenGL3_Init( "#version 150");
+
+                    Serial.addEventListener( [&] (const char * data, size_t len) -> void { SerialDataInputEvent(data,len); });
                 }
 
                 void RenderDeviceInspector() {
                     // Create a window called "My First Tool", with a menu bar.
-                    if (main_tool_active) {
-                        ImGui::Begin("Device Inspector", &main_tool_active, ImGuiWindowFlags_MenuBar);
+                    if (_main_tool_active) {
+                        ImGui::Begin("Device Inspector", &_main_tool_active, ImGuiWindowFlags_MenuBar);
                         if (ImGui::BeginMenuBar())
                         {
                             if (ImGui::BeginMenu("File"))
@@ -71,7 +75,7 @@ namespace newdigate {
                                     }
                                 }
                                 if (ImGui::MenuItem("Save", "Ctrl+S"))   { /* Do stuff */ }
-                                if (ImGui::MenuItem("Close", "Ctrl+W"))  { main_tool_active = false; }
+                                if (ImGui::MenuItem("Close", "Ctrl+W"))  { _main_tool_active = false; }
                                 ImGui::EndMenu();
                             }
                             ImGui::EndMenuBar();
@@ -105,6 +109,9 @@ namespace newdigate {
                         ImGui::EndChild();
                         ImGui::End();
                     }
+
+                    if (_serial_monitor_open)
+                        DrawSerialMonitor();
                 }
 
                 void Render() {
@@ -124,7 +131,22 @@ namespace newdigate {
 
             private:
                 sketch::SketchEngine &_sketch_engine;
-                bool main_tool_active;
+                bool _main_tool_active;
+                ImGuiSerialMonitor _serial_monitor;
+                bool _serial_monitor_open;
+                void SerialDataInputEvent(const char * data, size_t len) {
+                    _serial_monitor.AddLog(data, len);
+                }
+                void DrawSerialMonitor()
+                {
+                    // For the demo: add a debug button _BEFORE_ the normal log window contents
+                    // We take advantage of a rarely used feature: multiple calls to Begin()/End() are appending to the _same_ window.
+                    // Most of the contents of the window will be added by the log.Draw() call.
+                    ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+                    // Actually call in the regular Log helper (which will Begin() into the same window as we just did)
+                    _serial_monitor.Draw("Serial Monitor", &_serial_monitor_open);
+                }
+
             };
         }
     }

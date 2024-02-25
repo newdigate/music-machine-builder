@@ -1,18 +1,15 @@
 cmake_minimum_required(VERSION 3.6)
 project(synth_firmware_game C CXX)
-include(opengl.cmake.in)
 set(CMAKE_CXX_STANDARD 17)
 
-add_library(machinemodel SHARED STATIC model/machinemodel.cpp)
-
-find_package(assimp REQUIRED)
-include_directories(/usr/local/Cellar/assimp/5.3.1/include/)
-
 include_directories(../ext/LearnOpenGL)
+include_directories(${teensy_x86_stubs_INCLUDE_DIR})
+
 add_executable(main
         main.cpp
         view/ViewController.cpp
         view/ImGuiController.cpp
+        view/ImGuiSerialMonitor.cpp
         sketch/SketchFactory.cpp
         sketch/SketchEngine.cpp
         ../ext/LearnOpenGL/stb_image_aug.c
@@ -28,4 +25,4 @@ add_executable(main
 target_link_libraries(main machinemodel  ${LIBS})
 
 target_link_libraries(main assimp)
-target_link_libraries(main -L/usr/local/Cellar/assimp/5.3.1/lib/)
+target_link_libraries(main teensy_x86_stubs)

@@ -15,7 +15,7 @@
 #include <GLFW/glfw3.h>
 #endif
 
-#include "../model/machinemodel.h"
+#include "../../shared/model/machinemodel.h"
 #include "model.h"
 #include "camera.h"
 

@@ -19,13 +19,12 @@
 #include "../ext/ImGuiFileDialog/ImGuiFileDialog.h"
 #include "../ext/ImGuiFileDialog/ImGuiFileDialogConfig.h"
 
-#include "model/machinemodel.h"
+#include "../shared/model/machinemodel.h"
 #include "view/ImGuiController.h"
 #include "view/ViewController.h"
 #include "sketch/SketchEngine.h"
 
-//#define STB_IMAGE_IMPLEMENTATION
-//#include "stb_image.h"
+#include <Arduino.h>
 
 GLFWwindow *window = nullptr;
 
