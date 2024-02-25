@@ -1,9 +1,9 @@
 #include <Arduino.h>
-extern "C" void setup() {
+void setup() {
     Serial.printf("setup\n");
 }
 
-extern "C" void loop() {
+void loop() {
     Serial.printf("Please enter a string value:\n");
 
     //delayMilliseconds(1000);
