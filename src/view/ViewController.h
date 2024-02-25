@@ -455,7 +455,7 @@ namespace newdigate {
                     lastX = xpos;
                     lastY = ypos;
 
-                    int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+                    int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
                     if (state != GLFW_PRESS) {
                         return;
                     }

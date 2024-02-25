@@ -104,7 +104,7 @@ namespace newdigate {
                         // Display contents in a scrolling region
                         ImGui::TextColored(ImVec4(1,1,0,1), "Important Stuff");
                         ImGui::BeginChild("Scrolling");
-                        for (int n = 0; n < 50; n++)
+                        for (int n = 0; n < 2; n++)
                             ImGui::Text("%04d: Some text", n);
                         ImGui::EndChild();
                         ImGui::End();

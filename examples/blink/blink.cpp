@@ -1,9 +1,12 @@
 #include <Arduino.h>
 extern "C" void setup() {
-    Serial.printf("setup %d\n", 666);
+    Serial.printf("setup\n");
 }
 
 extern "C" void loop() {
-    Serial.printf("loop %d\n", 666);
-    delayMilliseconds(1000);
+    Serial.printf("Please enter a string value:\n");
+
+    //delayMilliseconds(1000);
+    String input = Serial.readString();
+    Serial.printf("recieved: %s\n", input.c_str());
 }

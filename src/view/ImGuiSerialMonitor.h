@@ -1,6 +1,7 @@
 #ifndef IMGUISERIALMONITOR_H
 #define IMGUISERIALMONITOR_H
 
+#include "hardware_serial.h"
 #include "../../ext/imgui/imgui.h"
 
 namespace newdigate {
@@ -8,12 +9,14 @@ namespace newdigate {
         namespace view {
             struct ImGuiSerialMonitor
             {
+                static const unsigned MAX_SEND_BUFFER_LENGTH = 1024;
                 ImGuiTextBuffer     Buf;
                 ImGuiTextFilter     Filter;
                 ImVector<int>       LineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
                 bool                AutoScroll;  // Keep scrolling if already at the bottom.
+                char                SendBuffer[MAX_SEND_BUFFER_LENGTH];
 
-                ImGuiSerialMonitor()
+                ImGuiSerialMonitor() : SendBuffer()
                 {
                     AutoScroll = true;
                     Clear();
@@ -42,6 +45,17 @@ namespace newdigate {
                     {
                         ImGui::End();
                         return;
+                    }
+
+                    if (ImGui::InputText("##ImGuiSerialMonitorSendEdit", SendBuffer, MAX_SEND_BUFFER_LENGTH)) {
+                    }
+                    ImGui::SameLine();
+
+                    if (ImGui::Button("Send")) {
+                        static char newline = '\0';
+                        Serial.queueSimulatedCharacterInput(SendBuffer, strlen(SendBuffer));
+                        Serial.queueSimulatedCharacterInput(&newline, 1);
+                        memset(SendBuffer, 0, MAX_SEND_BUFFER_LENGTH);
                     }
 
                     // Options menu
