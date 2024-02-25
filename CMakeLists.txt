@@ -10,6 +10,7 @@ add_library(machinemodel SHARED STATIC shared/model/machinemodel.cpp)
 
 # ********* x86 teensy cores :: feature/shared_serial branch
 set(BUILD_SHARED_LIBRARY ON)
+set(REDIRECT_SERIAL_OUT_TO_STD_OUT OFF)
 FetchContent_Declare(teensy_x86_stubs
         GIT_REPOSITORY https://github.com/newdigate/teensy-x86-stubs.git
         GIT_TAG        feature/shared_serial
