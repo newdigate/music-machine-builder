@@ -8,6 +8,7 @@
 #include <map>
 #include <unistd.h>
 
+#include "hardware_serial.h"
 #include "SketchFactory.h"
 
 namespace newdigate {
@@ -41,6 +42,12 @@ namespace newdigate {
                 bool LoadSketch(const char *filename) {
                     auto loaded = _factory.loadSketch(filename);
                     if (loaded) {
+
+                        // drain the serial buffer before loading a new sketch
+                        while (Serial.available()) {
+                            Serial.read();
+                        }
+
                         auto id = _instanceCount++;
                         shouldClose = false;
                         const int rc = pthread_create(&thread, NULL, arduinoThread, (void *)id);

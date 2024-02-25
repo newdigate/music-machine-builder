@@ -46,13 +46,15 @@ namespace newdigate {
                         ImGui::End();
                         return;
                     }
-
-                    if (ImGui::InputText("##ImGuiSerialMonitorSendEdit", SendBuffer, MAX_SEND_BUFFER_LENGTH)) {
+                    static char newline = '\0';
+                    if (ImGui::InputText("##ImGuiSerialMonitorSendEdit", SendBuffer, MAX_SEND_BUFFER_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll)) {
+                        Serial.queueSimulatedCharacterInput(SendBuffer, strlen(SendBuffer));
+                        Serial.queueSimulatedCharacterInput(&newline, 1);
+                        memset(SendBuffer, 0, MAX_SEND_BUFFER_LENGTH);
                     }
                     ImGui::SameLine();
 
                     if (ImGui::Button("Send")) {
-                        static char newline = '\0';
                         Serial.queueSimulatedCharacterInput(SendBuffer, strlen(SendBuffer));
                         Serial.queueSimulatedCharacterInput(&newline, 1);
                         memset(SendBuffer, 0, MAX_SEND_BUFFER_LENGTH);
