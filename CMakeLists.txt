@@ -9,10 +9,8 @@ add_library(machinemodel SHARED STATIC shared/model/machinemodel.cpp)
 
 include(cmake_declare_and_fetch.cmake.in)
 
-# ********* x86 teensy cores :: feature/shared_serial branch
-set(BUILD_SHARED_LIBRARY ON)
-set(REDIRECT_SERIAL_OUT_TO_STD_OUT OFF)
-message("--REDIRECT_SERIAL_OUT_TO_STD_OUT ${REDIRECT_SERIAL_OUT_TO_STD_OUT}" )
+# ********* x86 teensy cores :: main branch
+set(BUILD_DYNAMIC_LIBRARY ON)
 DeclareAndFetch(teensy_x86_stubs https://github.com/newdigate/teensy-x86-stubs.git main src)
 include_directories(${teensy_x86_stubs_SOURCE_DIR}/src)
 #***********
