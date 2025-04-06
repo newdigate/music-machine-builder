@@ -15,11 +15,11 @@
 #include <GLFW/glfw3.h>
 #endif
 
-#include "../../shared/model/machinemodel.h"
-#include "../../ext/imgui/imgui.h"
-#include "../../ext/imgui/imgui_impl_glfw.h"
-#include "../../ext/imgui/imgui_impl_opengl3.h"
-#include "../../ext/imgui/imgui_internal.h"
+#include "machinemodel.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_internal.h"
 #include "ImGuiFileDialogConfig.h"
 #include "ImGuiFileDialog.h"
 #include "../sketch/SketchEngine.h"
