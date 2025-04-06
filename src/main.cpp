@@ -16,8 +16,6 @@
 #include "../ext/imgui/imgui_impl_glfw.h"
 #include "../ext/imgui/imgui_impl_opengl3.h"
 #include "../ext/imgui/imgui_internal.h"
-#include "../ext/ImGuiFileDialog/ImGuiFileDialog.h"
-#include "../ext/ImGuiFileDialog/ImGuiFileDialogConfig.h"
 
 #include "../shared/model/machinemodel.h"
 #include "view/ImGuiController.h"

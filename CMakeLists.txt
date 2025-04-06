@@ -1,45 +1,30 @@
 cmake_minimum_required(VERSION 3.6)
 project(synth_firmware_game_project C CXX)
 include(FetchContent)
-include(opengl.cmake.in)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
 add_library(machinemodel SHARED STATIC shared/model/machinemodel.cpp)
 
+include(cmake_declare_and_fetch.cmake.in)
+
 # ********* x86 teensy cores :: feature/shared_serial branch
 set(BUILD_SHARED_LIBRARY ON)
 set(REDIRECT_SERIAL_OUT_TO_STD_OUT OFF)
 message("--REDIRECT_SERIAL_OUT_TO_STD_OUT ${REDIRECT_SERIAL_OUT_TO_STD_OUT}" )
-FetchContent_Declare(teensy_x86_stubs
-        GIT_REPOSITORY https://github.com/newdigate/teensy-x86-stubs.git
-        GIT_TAG        feature/shared_serial
-)
-FetchContent_MakeAvailable(teensy_x86_stubs)
-set(teensy_x86_stubs_local_include "${FETCHCONTENT_BASE_DIR}/teensy_x86_stubs-src/src")
-message(INFO " ${teensy_x86_stubs_local_include}")
-include_directories(${teensy_x86_stubs_local_include})
+DeclareAndFetch(teensy_x86_stubs https://github.com/newdigate/teensy-x86-stubs.git main src)
+include_directories(${teensy_x86_stubs_SOURCE_DIR}/src)
 #***********
 
+include_directories(ext/imgui)
+DeclareAndFetch(ImGuiFileDialog https://github.com/aiekick/ImGuiFileDialog.git master "")
+include_directories(${imguifiledialog_SOURCE_DIR})
 
-# ********* assimp model loading for importing .obj files
-set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
-set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF)
-set(ASSIMP_BUILD_OBJ_IMPORTER TRUE)
-FetchContent_Declare(assimp
-        GIT_REPOSITORY https://github.com/assimp/assimp.git
-        GIT_TAG        master
-)
-
-FetchContent_MakeAvailable(assimp)
-#*********** // end assimp
-
-
-
-
+include(opengl.cmake.in)
+add_subdirectory(libraries/Tlc5940)
+add_subdirectory(ext/imgui)
 add_subdirectory(examples/blink)
-
-
+add_subdirectory(examples/tlc5940)
 add_subdirectory(src)
 
