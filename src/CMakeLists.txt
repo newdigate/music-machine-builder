@@ -3,10 +3,11 @@ project(synth_firmware_game C CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 include_directories(../ext/LearnOpenGL)
+include_directories(../shared/model)
 include_directories(${teensy_x86_stubs_INCLUDE_DIR})
 include_directories(/usr/local/Cellar/glm/1.0.1/include/)
 include_directories(/usr/local/Cellar/assimp/5.4.3/include/)
-
+include_directories(../libraries/Tlc5940/)
 add_executable(main
         main.cpp
         view/ViewController.cpp
@@ -27,4 +28,4 @@ add_executable(main
 target_link_libraries(main machinemodel  ${LIBS})
 
 target_link_libraries(main -L/usr/local/Cellar/assimp/5.4.3/lib/ assimp)
-target_link_libraries(main teensy_x86_stubs)
+target_link_libraries(main teensy_x86_stubs tlc5940)

@@ -50,7 +50,7 @@ int main() {
 
     /* Initialize the library */
     if (!glfwInit()) {
-        return false;
+        return 0;
     }
 
 #ifdef __APPLE__
@@ -85,8 +85,7 @@ int main() {
                 newdigate::machine::machine.framebuffer[j*128+i] = std::rand() * 0xFFFF;
             }
         }
-        newdigate::machine::machine.machine_led_pwm_values[(count/64-1) % 256] = 0.0f;
-        newdigate::machine::machine.machine_led_pwm_values[count/64 % 256] = 1.0f;
+
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();

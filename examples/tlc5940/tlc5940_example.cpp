@@ -17,14 +17,12 @@ void setup()
     digitalWrite(CLEAR_PIN, HIGH); // enable pull-up
     Tlc.init();
 }
-
+int x = 0;
 void loop()
 {
-    // shiftUp returns the value shifted off the last pin
-    uint16_t sum = tlc_shiftUp() + analogRead(ANALOG_PIN) * 4;
-    if (digitalRead(CLEAR_PIN) == LOW || sum > 4095)
-        sum = 0;
-    Tlc.set(0, sum);
+    Tlc.set((x-1) % (NUM_TLCS*16), 0);
+    Tlc.set(x % (NUM_TLCS*16), 0xFFFF);
     Tlc.update();
-    delay(LED_PERIOD);
+    delayMilliseconds(50);
+    x++;
 }

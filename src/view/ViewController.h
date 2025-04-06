@@ -14,8 +14,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #endif
-
-#include "../../shared/model/machinemodel.h"
+#include "machinemodel.h"
+#include "Tlc5940.h"
 #include "model.h"
 #include "camera.h"
 
@@ -496,9 +496,9 @@ namespace newdigate {
                 explicit ViewController(GLFWwindow *window, Shader *bicolor_instance_shader, Shader *texture_shader, machinemodel *machine, unsigned awidth, unsigned aheight) :
                     _window(window), _bicolor_instance_shader(bicolor_instance_shader), _texture_shader(texture_shader), _machine(machine),
                     _sceneController(window, bicolor_instance_shader, texture_shader, awidth, aheight),
-                    _keyArrayViewController(window, bicolor_instance_shader, 18, machine->machine_led_pwm_values),
+                    _keyArrayViewController(window, bicolor_instance_shader, 18, machine_led_pwm_values),
                     _displayViewController(window, texture_shader, machine->framebuffer),
-                    _ledArrayViewController(window, bicolor_instance_shader, 18, machine->machine_led_pwm_values)
+                    _ledArrayViewController(window, bicolor_instance_shader, 18, machine_led_pwm_values)
                     {
                 }
 
@@ -507,9 +507,14 @@ namespace newdigate {
                     _keyArrayViewController.Draw(machine.Keys);
                     _ledArrayViewController.Draw(machine.Leds);
                     _displayViewController.Update();
+                    for (uint8_t i=0; i < NUM_TLCS*16; i++) {
+                        float f = static_cast<float>(Tlc.get(i));
+                        machine_led_pwm_values[i % 256] = f / 4095.0f;
+                    }
                 }
 
             private:
+                float machine_led_pwm_values[16*16];
                 GLFWwindow *_window;
                 Shader *_bicolor_instance_shader;
                 Shader *_texture_shader;
