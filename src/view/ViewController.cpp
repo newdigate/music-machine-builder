@@ -8,7 +8,7 @@ namespace newdigate {
     namespace machine {
         namespace view {
 
-            std::map<GLFWwindow*, SceneController*> SceneController::windowSceneControllers;
+            std::map<GLFWwindow*, ViewController*> ViewController::windowSceneControllers;
 
             const char* ViewControllerFactory::vertex_shader_bicolor_code = R"glsl(
 #version 330 core

@@ -18,15 +18,29 @@ namespace newdigate {
             U8G2 = 3
         };
 
-        class machineled {
+        class MachineElement {
         public:
+            explicit MachineElement() : id(_instanceCount++) {
+            }
+            virtual ~MachineElement() = default;
+            int id;
             float x = 0,y = 0, z = 0;
-            uint16_t pwmValue;    // 12-bit PWM value
+            static int _instanceCount;
         };
 
-        class machinekey {
+        class machineled : public MachineElement {
         public:
-            float x = 0,y = 0, z = 0;
+            explicit machineled() : MachineElement() {
+            }
+            virtual ~machineled() = default;
+        };
+
+        class machinekey : public MachineElement {
+        public:
+            explicit machinekey() : MachineElement() {
+            }
+            virtual ~machinekey() = default;
+
             machineled* led = nullptr;
             float verticalDisplacement = 0;
         };

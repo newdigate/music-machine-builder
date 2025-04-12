@@ -323,29 +323,28 @@ namespace newdigate {
                 uint16_t *_framebuffer;
             };
 
-            class SceneController {
+            class ViewController {
             public:
-                SceneController(GLFWwindow *window, Shader *shader, Shader *texture_shader, unsigned awidth, unsigned aheight)
-                    : _window(window),
-                      _bicolor_instance_shader(shader),
-                      _texture_shader(texture_shader),
-                      lightPos(1.2f, 5.0f, 2.0f),
-                      _width(awidth),
-                      _height(aheight) {
+                explicit ViewController(GLFWwindow *window, Shader *bicolor_instance_shader, Shader *texture_shader, machinemodel *machine, unsigned awidth, unsigned aheight) :
+                    _window(window), _bicolor_instance_shader(bicolor_instance_shader), _texture_shader(texture_shader), _machine(machine),
+                    _keyArrayViewController(window, bicolor_instance_shader, 18, machine_led_pwm_values),
+                    lightPos(1.2f, 5.0f, 2.0f),
+                    _displayViewController(window, texture_shader, machine->framebuffer),
+                    _ledArrayViewController(window, bicolor_instance_shader, 18, machine_led_pwm_values)
+                    {
+                        windowSceneControllers[window] = this;
 
-                    windowSceneControllers[window] = this;
+                        camera.Position = glm::vec3(6.0, 20.0, 5.0);
+                        camera.Pitch = -84.0;
+                        camera.Yaw = 270;
+                        camera.ProcessMouseMovement(0, 0);
 
-                    camera.Position = glm::vec3(6.0, 20.0, 5.0);
-                    camera.Pitch = -84.0;
-                    camera.Yaw = 270;
-                    camera.ProcessMouseMovement(0, 0);
-
-                    glfwMakeContextCurrent(window);
-                    glfwSetFramebufferSizeCallback(window, delegate_framebuffer_size_callback);// this->framebuffer_size_callback);
-                    glfwSetCursorPosCallback(window, delegate_mouse_callback);
-                    glfwSetScrollCallback(window, delegate_scroll_callback);
-                    glfwSetMouseButtonCallback(window, delegate_mouse_button_callback);
-                    glEnable(GL_DEPTH_TEST);
+                        glfwMakeContextCurrent(window);
+                        glfwSetFramebufferSizeCallback(window, delegate_framebuffer_size_callback);// this->framebuffer_size_callback);
+                        glfwSetCursorPosCallback(window, delegate_mouse_callback);
+                        glfwSetScrollCallback(window, delegate_scroll_callback);
+                        glfwSetMouseButtonCallback(window, delegate_mouse_button_callback);
+                        glEnable(GL_DEPTH_TEST);
                 }
 
                 void Update() {
@@ -379,8 +378,15 @@ namespace newdigate {
                     model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
                     _bicolor_instance_shader->setMat4("model", model);
 
-
+                    _keyArrayViewController.Draw(machine.Keys);
+                    _ledArrayViewController.Draw(machine.Leds);
+                    _displayViewController.Update();
+                    for (uint8_t i=0; i < NUM_TLCS*16; i++) {
+                        float f = static_cast<float>(Tlc.get(i));
+                        machine_led_pwm_values[i % 256] = f / 4095.0f;
+                    }
                 }
+
                 void processInput()
                 {
                     if (glfwGetKey(_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -403,11 +409,19 @@ namespace newdigate {
                     if (glfwGetKey(_window, GLFW_KEY_C) == GLFW_PRESS)
                         camera.ProcessMouseMovement(0, 1);
                 }
+
             private:
-                GLFWwindow* _window;
+                float machine_led_pwm_values[16*16];
+                GLFWwindow *_window;
                 Shader *_bicolor_instance_shader;
                 Shader *_texture_shader;
-                static std::map<GLFWwindow*, SceneController*> windowSceneControllers;
+                machinemodel *_machine;
+
+                KeyArrayViewController _keyArrayViewController;
+                LEDArrayViewController _ledArrayViewController;
+                DisplayViewController _displayViewController;
+
+                static std::map<GLFWwindow*, ViewController*> windowSceneControllers;
 
                 Camera camera;
                 glm::vec3 lightPos;
@@ -489,41 +503,8 @@ namespace newdigate {
                         windowSceneControllers[window]->scroll_callback(window, xoffset, yoffset);
                     }
                 }
-            };
 
-            class ViewController {
-            public:
-                explicit ViewController(GLFWwindow *window, Shader *bicolor_instance_shader, Shader *texture_shader, machinemodel *machine, unsigned awidth, unsigned aheight) :
-                    _window(window), _bicolor_instance_shader(bicolor_instance_shader), _texture_shader(texture_shader), _machine(machine),
-                    _sceneController(window, bicolor_instance_shader, texture_shader, awidth, aheight),
-                    _keyArrayViewController(window, bicolor_instance_shader, 18, machine_led_pwm_values),
-                    _displayViewController(window, texture_shader, machine->framebuffer),
-                    _ledArrayViewController(window, bicolor_instance_shader, 18, machine_led_pwm_values)
-                    {
-                }
 
-                void Update() {
-                    _sceneController.Update();
-                    _keyArrayViewController.Draw(machine.Keys);
-                    _ledArrayViewController.Draw(machine.Leds);
-                    _displayViewController.Update();
-                    for (uint8_t i=0; i < NUM_TLCS*16; i++) {
-                        float f = static_cast<float>(Tlc.get(i));
-                        machine_led_pwm_values[i % 256] = f / 4095.0f;
-                    }
-                }
-
-            private:
-                float machine_led_pwm_values[16*16];
-                GLFWwindow *_window;
-                Shader *_bicolor_instance_shader;
-                Shader *_texture_shader;
-                machinemodel *_machine;
-
-                SceneController _sceneController;
-                KeyArrayViewController _keyArrayViewController;
-                LEDArrayViewController _ledArrayViewController;
-                DisplayViewController _displayViewController;
             };
 
             class ViewControllerFactory {

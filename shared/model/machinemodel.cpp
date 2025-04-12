@@ -3,6 +3,9 @@
 //
 
 #include "machinemodel.h"
+using namespace newdigate::machine;
 extern "C" {
-    newdigate::machine::machinemodel machine;
+    machinemodel machine;
 }
+
+int MachineElement::_instanceCount = 0;
