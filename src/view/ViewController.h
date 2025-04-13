@@ -533,7 +533,7 @@ namespace newdigate {
 
                 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 {
-                    if (button == 0) {
+                    if (button == 0 && action == 1) {
                         //viewPickingShader = !viewPickingShader;
                         Draw(true);
                         glFlush();
@@ -545,7 +545,11 @@ namespace newdigate {
                         unsigned char data[width * height * 4];
                         GLint x = lastX, y = lastY;
                         glReadPixels(x, height - y, 1,1, GL_RGBA, GL_UNSIGNED_BYTE, data);
-                        std::cout << "x: " << x << " y: " << y  << " = " << (int)data[0] << " " << (int)data[1] << " " << (int)data[2]  << " " << (int)data[3] << std::endl;
+                        int pickedID =
+                                data[0] +
+                                data[1] * 256 +
+                                data[2] * 256*256;
+                        std::cout << pickedID << std::endl;
 
                     }
                 }

@@ -71,9 +71,10 @@ void main()
     if (!RenderForPicking)
         FragColor = (TextureIndex * FragColor2) + ( (1.0f - TextureIndex) * FragColor1 );
    else {
-        int r = int(Identity) & 0x000000FF >>  0;
-        int g = int(Identity) & 0x0000FF00 >>  8;
-        int b = int(Identity) & 0x00FF0000 >> 16;
+        int i = int(Identity);
+        int r = i % 256;
+        int g = (i / 256) % 256;
+        int b = (i / (256*256)) % 256;
         FragColor = vec4(r/255.0, g/255.0, b/255.0, 1.0);// + FragColor;
     }
 }
