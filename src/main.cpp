@@ -47,7 +47,6 @@ int main() {
         }
     }
     newdigate::machine::sketch::SketchEngine sketch_engine;
-
     /* Initialize the library */
     if (!glfwInit()) {
         return 0;

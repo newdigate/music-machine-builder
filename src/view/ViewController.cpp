@@ -16,10 +16,12 @@ layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 Normal;
 layout (location = 3) in mat4 aInstanceMatrix;
 layout (location = 7) in float aTexuteIndex;
+layout (location = 8) in float anIdentity;
 
 out vec4 FragColor1;
 out vec4 FragColor2;
 out float TextureIndex;
+out float Identity;
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -51,6 +53,7 @@ void main()
     FragColor2 =  vec4((ambient + diffuse + spec), 0.5f) * aColor2;
     TextureIndex = aTexuteIndex;
     gl_Position = projection * view * aInstanceMatrix * vec4(aPos, 1.0f);
+    Identity = anIdentity;
 }
 )glsl";
 
@@ -58,13 +61,21 @@ void main()
 #version 330 core
 out vec4 FragColor;
 
+in float Identity;
 in vec4 FragColor1;
 in vec4 FragColor2;
 in float TextureIndex;
-
+uniform bool RenderForPicking;
 void main()
 {
-    FragColor = (TextureIndex * FragColor2) + ( (1.0f - TextureIndex) * FragColor1 );
+    if (!RenderForPicking)
+        FragColor = (TextureIndex * FragColor2) + ( (1.0f - TextureIndex) * FragColor1 );
+   else {
+        int r = int(Identity) & 0x000000FF >>  0;
+        int g = int(Identity) & 0x0000FF00 >>  8;
+        int b = int(Identity) & 0x00FF0000 >> 16;
+        FragColor = vec4(r/255.0, g/255.0, b/255.0, 1.0);// + FragColor;
+    }
 }
 )glsl";
 

@@ -35,8 +35,7 @@ namespace newdigate {
                 explicit KeyArrayViewController(GLFWwindow *window, Shader *shader, uint16_t numKeys, float *textureIndexes) : _window(window), _shader(shader), _numKeys(numKeys), _modelTransformGLBuffer(0), _modelTextureIndex(textureIndexes) {
                     _keyModel = new Model(tr909_key_intermediate_obj, tr909_key_intermediate_obj_len);
                     _modelMatrices = new glm::mat4[MAX_KEYS];
-                    //modelTextureIndex = new float[MAX_KEYS] {1.0f, 0.25f, 0.0f};
-
+                    _pickingIds = new float[1024];
                     /* Bind the modelTextureIndex instance array parameter */
                     glGenBuffers(1, &_modelTextIndexGLBuffer);
                     glBindBuffer(GL_ARRAY_BUFFER, _modelTextIndexGLBuffer);
@@ -87,9 +86,27 @@ namespace newdigate {
 
                         glBindVertexArray(0);
                     }
+
+                    for (int i=0; i<1024; i++) {
+                        _pickingIds[i] = i+1;//) / 1024.0;//) % 16) / 16.0;
+                    }
+
+                    glGenBuffers(1, &_modelIdentifierGLBuffer);
+                    glBindBuffer(GL_ARRAY_BUFFER, _modelIdentifierGLBuffer);
+                    glBufferData(GL_ARRAY_BUFFER, 1024 * sizeof(float), &_pickingIds[0], GL_STATIC_DRAW);
+
+                    for (unsigned int i = 0; i < _keyModel->meshes.size(); i++)
+                    {
+                        unsigned int VAO = _keyModel->meshes[i].VAO;
+                        glBindVertexArray(VAO);
+                        glEnableVertexAttribArray(8);
+                        glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, sizeof(float), 0);
+                        glVertexAttribDivisor(8, 1);
+                        glBindVertexArray(0);
+                    }
                 }
 
-                void Draw(const std::vector<machinekey> &keys) const {
+                void Draw(const std::vector<machinekey> &keys, bool renderingForPicking) const {
                     unsigned i = 0;
                     for (auto && key : keys) {
                         glm::mat4 model = glm::mat4(1.0f);
@@ -101,6 +118,7 @@ namespace newdigate {
                     _shader->use();
                     _shader->setVec4("aColor1",0.7f, 0.7f, 0.7f, 0.8f);
                     _shader->setVec4("aColor2",1.0f, 0.7f, 0.7f, 1.0f);
+                    _shader->setBool("RenderForPicking", renderingForPicking);
 
                     for (unsigned int i = 0; i < _keyModel->meshes.size(); i++)
                     {
@@ -112,11 +130,14 @@ namespace newdigate {
                         glBindBuffer(GL_ARRAY_BUFFER, _modelTransformGLBuffer);
                         glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(keys.size()) * sizeof(glm::mat4), &_modelMatrices[0], GL_STATIC_DRAW);
 
+                        glBindBuffer(GL_ARRAY_BUFFER, _modelIdentifierGLBuffer);
+                        glBufferData(GL_ARRAY_BUFFER, 1024 * sizeof(float), &_pickingIds[0], GL_STATIC_DRAW);
+
                         glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(_keyModel->meshes[i].indices.size()), GL_UNSIGNED_INT, 0, keys.size());
 
                         glBindVertexArray(0);
                     }
-                    _keyModel->Draw(*_shader);
+                    //_keyModel->Draw(*_shader);
                 }
 
 
@@ -133,10 +154,12 @@ namespace newdigate {
 
                 unsigned _modelTextIndexGLBuffer;
                 unsigned _modelTransformGLBuffer;
+                unsigned _modelIdentifierGLBuffer;
 
                 glm::mat4* _modelMatrices;
                 float *_modelTextureIndex;
-                const unsigned MAX_KEYS = 256;
+                const unsigned MAX_KEYS = 1024;
+                float *_pickingIds;
             };
 
             class LEDArrayViewController {
@@ -339,12 +362,14 @@ namespace newdigate {
                         camera.Yaw = 270;
                         camera.ProcessMouseMovement(0, 0);
 
+
                         glfwMakeContextCurrent(window);
                         glfwSetFramebufferSizeCallback(window, delegate_framebuffer_size_callback);// this->framebuffer_size_callback);
                         glfwSetCursorPosCallback(window, delegate_mouse_callback);
                         glfwSetScrollCallback(window, delegate_scroll_callback);
                         glfwSetMouseButtonCallback(window, delegate_mouse_button_callback);
                         glEnable(GL_DEPTH_TEST);
+
                 }
 
                 void Update() {
@@ -352,7 +377,29 @@ namespace newdigate {
                     deltaTime = currentFrame - lastFrame;
                     lastFrame = currentFrame;
                     processInput();
-                    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+                    Draw(viewPickingShader);
+                    //Draw(true);
+                    for (uint8_t i=0; i < NUM_TLCS*16; i++) {
+                        float f = static_cast<float>(Tlc.get(i));
+                        machine_led_pwm_values[i % 256] = f / 4095.0f;
+                    }
+                }
+
+                void Draw(bool renderForPicking) {
+                    /*
+                    // Enable depth test
+                    glEnable(GL_DEPTH_TEST);
+                    // Accept fragment if it is closer to the camera than the former one
+                    glDepthFunc(GL_LESS);
+
+                    // Cull triangles which normal is not towards the camera
+                    glEnable(GL_CULL_FACE); */
+
+                    if (renderForPicking)
+                        glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+                    else
+                        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     //float aspectRatio = static_cast<float>(_width) / static_cast<float>(_height);
                     glm::mat4 projection = glm::perspective(glm::radians(45.0f), 640.0f / 480.0f, 0.1f, 100.0f);
@@ -378,13 +425,9 @@ namespace newdigate {
                     model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
                     _bicolor_instance_shader->setMat4("model", model);
 
-                    _keyArrayViewController.Draw(machine.Keys);
+                    _keyArrayViewController.Draw(machine.Keys, renderForPicking);
                     _ledArrayViewController.Draw(machine.Leds);
                     _displayViewController.Update();
-                    for (uint8_t i=0; i < NUM_TLCS*16; i++) {
-                        float f = static_cast<float>(Tlc.get(i));
-                        machine_led_pwm_values[i % 256] = f / 4095.0f;
-                    }
                 }
 
                 void processInput()
@@ -416,6 +459,7 @@ namespace newdigate {
                 Shader *_bicolor_instance_shader;
                 Shader *_texture_shader;
                 machinemodel *_machine;
+                bool viewPickingShader = false;
 
                 KeyArrayViewController _keyArrayViewController;
                 LEDArrayViewController _ledArrayViewController;
@@ -469,13 +513,17 @@ namespace newdigate {
                     lastX = xpos;
                     lastY = ypos;
 
-                    int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
-                    if (state != GLFW_PRESS) {
+                    int stater = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
+                    if (stater == GLFW_PRESS) {
+                        camera.ProcessMouseMovement(xoffset, yoffset);
                         return;
                     }
 
+                    int statel = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+                    if (statel == GLFW_PRESS) {
 
-                    camera.ProcessMouseMovement(xoffset, yoffset);
+                    }
+
                 }
                 static void delegate_mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
                     if (windowSceneControllers.count(window) > 0) {
@@ -485,6 +533,21 @@ namespace newdigate {
 
                 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 {
+                    if (button == 0) {
+                        //viewPickingShader = !viewPickingShader;
+                        Draw(true);
+                        glFlush();
+                        glFinish();
+                        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+                        int width, height;
+                        glfwGetWindowSize(window, &width, &height);
+                        unsigned char data[width * height * 4];
+                        GLint x = lastX, y = lastY;
+                        glReadPixels(x, height - y, 1,1, GL_RGBA, GL_UNSIGNED_BYTE, data);
+                        std::cout << "x: " << x << " y: " << y  << " = " << (int)data[0] << " " << (int)data[1] << " " << (int)data[2]  << " " << (int)data[3] << std::endl;
+
+                    }
                 }
                 static void delegate_mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
                     if (windowSceneControllers.count(window) > 0) {
