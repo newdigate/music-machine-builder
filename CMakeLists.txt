@@ -16,7 +16,7 @@ include_directories(${teensy_x86_stubs_SOURCE_DIR}/src)
 #***********
 
 include_directories(ext/imgui)
-DeclareAndFetch(ImGuiFileDialog https://github.com/aiekick/ImGuiFileDialog.git master "")
+DeclareAndFetch(ImGuiFileDialog https://github.com/aiekick/ImGuiFileDialog.git master "/")
 include_directories(${imguifiledialog_SOURCE_DIR})
 
 include(opengl.cmake.in)

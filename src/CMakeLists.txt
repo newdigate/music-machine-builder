@@ -23,9 +23,8 @@ add_executable(main
         ../ext/imgui/imgui_widgets.cpp
         ../ext/imgui/imgui_impl_glfw.cpp
         ../ext/imgui/imgui_impl_opengl3.cpp
-        ${imguifiledialog_SOURCE_DIR}/ImGuiFileDialog.cpp
         resources/alpine-keycap-led-intermediate.cpp)
-target_link_libraries(main machinemodel  ${LIBS})
+target_link_libraries(main machinemodel ImGuiFileDialog ${LIBS})
 
 target_link_libraries(main -L/usr/local/Cellar/assimp/5.4.3/lib/ assimp)
 target_link_libraries(main teensy_x86_stubs tlc5940)
