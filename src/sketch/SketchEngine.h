@@ -6,6 +6,7 @@
 #define SKETCHENGINE_H
 
 #include <map>
+#include <pthread.h>
 #include <unistd.h>
 
 #include "hardware_serial.h"

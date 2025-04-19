@@ -46,7 +46,7 @@ int main() {
             newdigate::machine::machine.Leds.push_back( led );
         }
     }
-    newdigate::machine::sketch::SketchEngine sketch_engine;
+
     /* Initialize the library */
     if (!glfwInit()) {
         return 0;
@@ -68,7 +68,19 @@ int main() {
         glfwTerminate();
         return -1;
     }
+
+
+
     glfwMakeContextCurrent(window);
+    GLenum err = glewInit();
+    if (GLEW_OK != err)
+    {
+        std::cerr << "Error: " << glewGetErrorString(err) << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+
+    newdigate::machine::sketch::SketchEngine sketch_engine;
 
     newdigate::machine::view::ViewControllerFactory factory;
     newdigate::machine::view::ViewController *view_controller = factory.create(window, &newdigate::machine::machine, 1024, 786);
