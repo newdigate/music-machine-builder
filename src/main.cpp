@@ -72,6 +72,7 @@ int main() {
 
 
     glfwMakeContextCurrent(window);
+#if (not TARGET_OS_OSX)
     GLenum err = glewInit();
     if (GLEW_OK != err)
     {
@@ -79,6 +80,7 @@ int main() {
         glfwTerminate();
         return -1;
     }
+#endif
 
     newdigate::machine::sketch::SketchEngine sketch_engine;
 
