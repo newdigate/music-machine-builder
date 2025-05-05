@@ -538,13 +538,16 @@ namespace newdigate {
                         Draw(true);
                         glFlush();
                         glFinish();
-                        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+                        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
                         int width, height;
+                        float scalex, scaley;
                         glfwGetWindowSize(window, &width, &height);
-                        unsigned char data[width * height * 4];
+                        glfwGetWindowContentScale(window, &scalex, &scaley);
+                        //GLbyte data[width * height * 4];
+                        GLbyte data[4];
                         GLint x = lastX, y = lastY;
-                        glReadPixels(x, height - y, 1,1, GL_RGBA, GL_UNSIGNED_BYTE, data);
+                        glReadPixels(x * scalex, (height - y) * scaley, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, data);
                         int pickedID =
                                 data[0] +
                                 data[1] * 256 +
